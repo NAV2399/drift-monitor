@@ -1,0 +1,12 @@
+# Week 1 — generator foundations
+numpy>=1.26
+pandas>=2.2
+pytest>=8.0
+
+# Week 2 — streaming (install when you start Week 2; PyFlink is heavy)
+# apache-flink==1.20.0
+# kafka-python>=2.0
+
+# Week 3 — cloud + Databricks
+# boto3>=1.34
+# delta-spark>=3.2

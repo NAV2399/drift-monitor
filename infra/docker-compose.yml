@@ -1,0 +1,19 @@
+# Laptop-friendly streaming stack (Phase A).
+# Redpanda = Kafka-compatible API in ONE light container (no Zookeeper, no KRaft).
+# Your Python code uses kafka-python exactly as it would with real Kafka.
+# Usage:  docker compose -f infra/docker-compose.yml up -d
+# Topics: docker exec redpanda rpk topic create transactions drift-alerts
+services:
+  redpanda:
+    image: redpandadata/redpanda:v24.2.1
+    container_name: redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 1G
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr 0.0.0.0:9092
+      - --advertise-kafka-addr localhost:9092
+    ports:
+      - "9092:9092"
