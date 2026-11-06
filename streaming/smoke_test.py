@@ -1,6 +1,7 @@
 """Smoke test v2: clean up PaySim-style field names, send, read back."""
-import json
 from kafka import KafkaProducer, KafkaConsumer
+from generator.contract import to_clean_event
+import json
 
 # What the "application" (PaySim) hands us — its names, not ours.
 raw = {
@@ -9,18 +10,13 @@ raw = {
     "nameOrig": "C1231006815",
     "nameDest": "M1979787155",
     "isFraud": 0,
+    "step": 1,
+    "oldbalanceOrg": 1000.0,
+    "newbalanceOrig": 749.25,
+    "oldbalanceDest": 0.0,
+    "newbalanceDest": 0.0,
 }
 
-
-def to_clean_event(raw):
-    """Rename PaySim fields into our event contract."""
-    return {
-        "transaction_type": raw["type"],
-        "amount": raw["amount"],
-        "origin_account": raw["nameOrig"],
-        "destination_account": raw["nameDest"],
-        "is_fraud": bool(raw["isFraud"]),
-    }
 
 
 event = to_clean_event(raw)
@@ -29,12 +25,12 @@ producer = KafkaProducer(
     bootstrap_servers="localhost:9092",
     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
 )
-producer.send("transactions", event)
+producer.send("smoke-test", event)
 producer.flush()
 print("Sent:", event)
 
 consumer = KafkaConsumer(
-    "transactions",
+    "smoke-test",
     bootstrap_servers="localhost:9092",
     auto_offset_reset="earliest",
     consumer_timeout_ms=5000,
