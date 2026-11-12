@@ -1,18 +1,20 @@
-"""Week 2: fill these in as the generator takes shape."""
-import numpy as np
 import pandas as pd
 
-
-def test_sudden_drift_changes_mean():
-    # generate chunk, inject sudden drift, assert mean shifted
-    pass
+from generator.drift import inject_sudden
 
 
-def test_gradual_drift_is_monotonic():
-    # progress 0.0 -> 1.0 should move the mean monotonically
-    pass
+def test_sudden_changes_only_rows_from_start():
+    df = pd.DataFrame({"amount": [10.0, 10.0, 10.0, 10.0]})
+    out = inject_sudden(df, start=2, factor=3.0)
+    assert out["amount"].tolist() == [10.0, 10.0, 30.0, 30.0]
+    assert out["is_drifted"].tolist() == [False, False, True, True]
 
 
-def test_manifest_matches_injection_points():
-    # manifest drift points must equal the configured at_event values
-    pass
+def test_sudden_does_not_modify_input():
+    df = pd.DataFrame({"amount": [10.0, 10.0]})
+    inject_sudden(df, start=0, factor=3.0)
+    assert df["amount"].tolist() == [10.0, 10.0]
+
+
+
+
