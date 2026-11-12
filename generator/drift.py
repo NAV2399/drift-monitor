@@ -34,3 +34,22 @@ def inject_gradual(
     out["is_drifted"] = drifted
     out.loc[drifted, column] = out.loc[drifted, column] * factor
     return out
+
+
+def inject_type_shift(
+    df: pd.DataFrame,
+    start: int,
+    from_type: str = "PAYMENT",
+    to_type: str = "TRANSFER",
+    fraction: float = 0.3,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """From row `start`, relabel a `fraction` of `from_type` rows as `to_type`."""
+    out = df.copy()
+    rng = np.random.default_rng(seed)
+    after_start = np.arange(len(out)) >= start
+    is_from = (out["type"] == from_type).to_numpy()
+    flip = after_start & is_from & (rng.random(len(out)) < fraction)
+    out.loc[flip, "type"] = to_type
+    out["is_drifted"] = after_start
+    return out

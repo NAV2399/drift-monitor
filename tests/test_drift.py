@@ -1,7 +1,7 @@
 import pandas as pd
 
-from generator.drift import inject_gradual, inject_sudden
 
+from generator.drift import inject_gradual, inject_sudden, inject_type_shift
 
 def test_sudden_changes_only_rows_from_start():
     df = pd.DataFrame({"amount": [10.0, 10.0, 10.0, 10.0]})
@@ -32,3 +32,18 @@ def test_gradual_is_reproducible():
     a = inject_gradual(df, start=200, width=600)
     b = inject_gradual(df, start=200, width=600)
     assert a["is_drifted"].tolist() == b["is_drifted"].tolist()
+
+
+def test_type_shift_moves_share():
+    df = pd.DataFrame({"type": ["PAYMENT"] * 1000})
+    out = inject_type_shift(df, start=500, fraction=0.5)
+    before = (out.loc[:499, "type"] == "TRANSFER").mean()
+    after = (out.loc[500:, "type"] == "TRANSFER").mean()
+    assert before == 0.0
+    assert 0.35 < after < 0.65
+
+
+def test_type_shift_only_touches_from_type():
+    df = pd.DataFrame({"type": ["CASH_IN"] * 100})
+    out = inject_type_shift(df, start=0, fraction=1.0)
+    assert (out["type"] == "CASH_IN").all()
