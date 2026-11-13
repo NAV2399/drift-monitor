@@ -8,3 +8,14 @@
 - **PSI threshold:** 0.25 (industry standard). Baseline false alarms: amount 0.8%, type 0%.
 - **KS threshold:** D > 0.15, not p < 0.05. With 50k-row windows, p-values flag even natural noise. 0.15 gives about 4% baseline false alarms. We chose sensitivity over silence because the data represents customers' money.
 - **Labels:** `is_drifted` never enters Kafka, to prevent label leakage.
+## First results (previous-window reference)
+
+- Sudden ×2: caught at delay 0 by PSI and KS on amount.
+- Gradual over 200k rows: caught by PSI at delay 4; KS missed.
+- Gradual over 1M rows: missed by all detectors. Neighbouring windows differ too little.
+- Type shift 30%: missed. A PSI of about 0.12 is within natural noise (baseline max 0.117).
+- Grading uses a no-drift control: alerts that also fire on undrifted data are not credited.
+
+## Known limitation
+
+- Count-based windows fill slowly in quiet hours, so overnight drift may be detected hours late. Production fix: close a window at 50k rows OR 1 hour, whichever comes first.
