@@ -1,39 +1,31 @@
-"""Drift detectors. Each implements: update(value) -> bool (drift or not).
-
-Detectors run inside the PyFlink job over windowed features (Week 2).
-These pure-Python versions are unit-testable without Flink.
-"""
+"""Drift detectors: compare a reference window with a current window."""
 import numpy as np
+import pandas as pd
+
+EPS = 1e-6  # tiny number to avoid dividing by zero or log(0)
 
 
-class PSIDetector:
-    """Population Stability Index vs. a reference window."""
-
-    def __init__(self, bins: int = 10, threshold: float = 0.25):
-        self.bins = bins
-        self.threshold = threshold
-        self.reference = None
-
-    def update(self, window: np.ndarray) -> bool:
-        raise NotImplementedError  # Week 2
+def psi_from_shares(ref_shares, cur_shares) -> float:
+    """PSI between two lists of bucket shares (each list sums to 1)."""
+    ref = np.clip(ref_shares, EPS, None)
+    cur = np.clip(cur_shares, EPS, None)
+    return float(np.sum((cur - ref) * np.log(cur / ref)))
 
 
-class KSDetector:
-    """Kolmogorov–Smirnov two-sample test vs. a reference window."""
-
-    def __init__(self, alpha: float = 0.05):
-        self.alpha = alpha
-        self.reference = None
-
-    def update(self, window: np.ndarray) -> bool:
-        raise NotImplementedError  # Week 2
+def psi_numeric(reference, current, bins: int = 10) -> float:
+    """PSI for a numeric column, e.g. amount."""
+    edges = np.unique(np.quantile(reference, np.linspace(0, 1, bins + 1)))
+    edges[0], edges[-1] = -np.inf, np.inf
+    ref_counts, _ = np.histogram(reference, bins=edges)
+    cur_counts, _ = np.histogram(current, bins=edges)
+    return psi_from_shares(ref_counts / len(reference), cur_counts / len(current))
 
 
-class ADWINDetector:
-    """Adaptive windowing detector over the feature stream."""
-
-    def __init__(self, delta: float = 0.002):
-        self.delta = delta
-
-    def update(self, value: float) -> bool:
-        raise NotImplementedError  # Week 2
+def psi_categorical(reference, current) -> float:
+    """PSI for a category column, e.g. transaction type."""
+    categories = sorted(set(reference) | set(current))
+    ref = pd.Series(reference).value_counts(normalize=True)
+    cur = pd.Series(current).value_counts(normalize=True)
+    ref_shares = np.array([ref.get(c, 0.0) for c in categories])
+    cur_shares = np.array([cur.get(c, 0.0) for c in categories])
+    return psi_from_shares(ref_shares, cur_shares)
