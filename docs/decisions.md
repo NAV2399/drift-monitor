@@ -19,3 +19,12 @@
 ## Known limitation
 
 - Count-based windows fill slowly in quiet hours, so overnight drift may be detected hours late. Production fix: close a window at 50k rows OR 1 hour, whichever comes first.
+
+## Results with ADWIN (horizon 30 windows)
+
+- Sudden ×2: PSI 0, KS 0, ADWIN 3 windows.
+- Gradual 200k: PSI 4, KS missed, ADWIN 7.
+- Gradual 1M: PSI and KS missed; ADWIN caught at 16 — the only detector that catches slow drift.
+- False alarms before drift: PSI 1, KS 1, ADWIN 0.
+- Horizon 30 vs 50 gave identical results, so the results are robust to the horizon choice.
+- Conclusion: run PSI and ADWIN together: PSI for fast jumps, ADWIN for slow creep.
