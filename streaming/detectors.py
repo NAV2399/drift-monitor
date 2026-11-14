@@ -1,4 +1,5 @@
 """Drift detectors: compare a reference window with a current window."""
+from river import drift
 import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp
@@ -36,3 +37,14 @@ def ks_numeric(reference, current) -> tuple[float, float]:
     """KS test: returns (D statistic, p-value)."""
     result = ks_2samp(reference, current)
     return float(result.statistic), float(result.pvalue)
+
+
+def adwin_detections(values, delta: float = 0.002) -> list[int]:
+    """Feed values one at a time; return the positions where ADWIN signalled drift."""
+    detector = drift.ADWIN(delta=delta)
+    positions = []
+    for i, value in enumerate(values):
+        detector.update(value)
+        if detector.drift_detected:
+            positions.append(i)
+    return positions

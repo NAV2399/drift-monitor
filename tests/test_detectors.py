@@ -1,7 +1,6 @@
 import numpy as np
 
-from streaming.detectors import ks_numeric, psi_categorical, psi_numeric
-
+from streaming.detectors import adwin_detections, ks_numeric, psi_categorical, psi_numeric
 def test_psi_numeric_same_data_is_near_zero():
     rng = np.random.default_rng(0)
     a = rng.normal(100, 10, 5000)
@@ -42,3 +41,15 @@ def test_ks_shifted_data_has_large_gap():
     d, p = ks_numeric(a, b)
     assert d > 0.5
     assert p < 0.001
+
+def test_adwin_quiet_on_stable_data():
+    rng = np.random.default_rng(0)
+    values = rng.normal(0, 1, 2000)
+    assert adwin_detections(values) == []
+
+
+def test_adwin_catches_mean_jump():
+    rng = np.random.default_rng(0)
+    values = np.concatenate([rng.normal(0, 1, 1000), rng.normal(3, 1, 1000)])
+    positions = adwin_detections(values)
+    assert any(1000 <= p < 1200 for p in positions)
