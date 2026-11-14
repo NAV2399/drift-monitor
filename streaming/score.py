@@ -2,12 +2,13 @@
 import pandas as pd
 
 from generator.drift import inject_gradual, inject_sudden, inject_type_shift
-from streaming.calibrate import WINDOW_SIZE, compare_adjacent_windows, load_baseline
+from streaming.calibrate import WINDOW_SIZE, adwin_window_counts, compare_adjacent_windows, load_baseline
 
-THRESHOLDS = {"psi_amount": 0.25, "psi_type": 0.25, "ks_d_amount": 0.15}
+
+THRESHOLDS = {"psi_amount": 0.25, "psi_type": 0.25, "ks_d_amount": 0.15, "adwin_amount": 0}
 DRIFT_WINDOW = 60
 DRIFT_START = DRIFT_WINDOW * WINDOW_SIZE
-HORIZON = 10
+HORIZON =30
 
 SCENARIOS = [
     ("no_drift",         lambda df: df),
@@ -43,14 +44,20 @@ def grade(scores: pd.DataFrame, scenario: str, control: dict) -> list[dict]:
         })
     return rows
 
+def score_stream(df: pd.DataFrame) -> pd.DataFrame:
+    """Window scores from PSI and KS, plus ADWIN detections per window."""
+    scores = compare_adjacent_windows(df)
+    counts = adwin_window_counts(df)
+    scores["adwin_amount"] = scores["window"].map(counts).fillna(0)
+    return scores
 
 def main():
     base = load_baseline()
-    control = alert_windows(compare_adjacent_windows(base))
+    control = alert_windows(score_stream(base))
     results = []
     for name, make_drift in SCENARIOS:
         print(f"Running {name} ...")
-        scores = compare_adjacent_windows(make_drift(base))
+        scores = score_stream(make_drift(base))
         results.extend(grade(scores, name, control))
     table = pd.DataFrame(results)
     print(table.to_string(index=False))

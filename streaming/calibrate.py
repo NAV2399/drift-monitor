@@ -1,11 +1,13 @@
 """Calibration: run detectors on the undrifted baseline to see how often they fire."""
 import duckdb
 import pandas as pd
+import numpy as np
 
-from streaming.detectors import ks_numeric, psi_categorical, psi_numeric
+from streaming.detectors import adwin_detections, ks_numeric, psi_categorical, psi_numeric
+
 
 WINDOW_SIZE = 50_000
-
+ADWIN_CHUNK = 5_000
 
 def load_baseline() -> pd.DataFrame:
     """Load type and amount for all rows, in file order."""
@@ -30,6 +32,14 @@ def compare_adjacent_windows(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -
             "ks_d_amount": ks_d,
         })
     return pd.DataFrame(rows)
+
+def adwin_window_counts(df: pd.DataFrame, window_size: int = WINDOW_SIZE,
+                        chunk: int = ADWIN_CHUNK) -> pd.Series:
+    """Run ADWIN on the median log-amount of each chunk; count detections per window."""
+    medians = np.log1p(df["amount"]).groupby(df.index // chunk).median()
+    positions = adwin_detections(medians.to_numpy())
+    windows = [(p * chunk) // window_size for p in positions]
+    return pd.Series(windows, dtype="int64").value_counts()
 
 
 def main():
