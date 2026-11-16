@@ -15,6 +15,7 @@ kafka-python>=2.0
 numpy>=1.26
 pandas>=2.2
 pytest>=8.0
+pyarrow>=15
 
 # Week 2 — streaming (install when you start Week 2; PyFlink is heavy)
 # apache-flink==1.20.0
