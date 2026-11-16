@@ -19,7 +19,7 @@
 ## Known limitation
 
 - Count-based windows fill slowly in quiet hours, so overnight drift may be detected hours late. Production fix: close a window at 50k rows OR 1 hour, whichever comes first.
-
+- **Databricks access to S3:** attempted a Unity Catalog external location via a cross-account IAM role. Validation failed at Assume Role on Free Edition (same failure reported by other Free Edition users in us-east-2). Workaround: bronze files copied into a Databricks Volume. In production (paid Databricks) the external location is the correct design.
 ## Results with ADWIN (horizon 30 windows)
 
 - Sudden ×2: PSI 0, KS 0, ADWIN 3 windows.
