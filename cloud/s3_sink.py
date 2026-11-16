@@ -9,7 +9,7 @@ from kafka import KafkaConsumer
 BUCKET = "drift-monitor-nav2399-2026"
 TOPIC = "transactions"
 PREFIX = "bronze/transactions"
-BATCH_SIZE = 500
+BATCH_SIZE = 50_000
 
 
 def write_batch(s3, events: list, first_offset: int) -> None:
@@ -29,7 +29,7 @@ def main():
         group_id="s3-sink",
         auto_offset_reset="earliest",
         enable_auto_commit=False,
-        consumer_timeout_ms=5000,
+        consumer_timeout_ms=60000,
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
     )
 
