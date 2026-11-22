@@ -1,8 +1,7 @@
-# Laptop-friendly streaming stack (Phase A).
-# Redpanda = Kafka-compatible API in ONE light container (no Zookeeper, no KRaft).
-# Your Python code uses kafka-python exactly as it would with real Kafka.
-# Usage:  docker compose -f infra/docker-compose.yml up -d
-# Topics: docker exec redpanda rpk topic create transactions drift-alerts
+# Laptop-friendly streaming stack.
+# Redpanda = Kafka-compatible broker. Flink = stream processor (PyFlink inside).
+# Usage:  docker compose -f infra/docker-compose.yml up -d --build
+# Topics: docker exec redpanda rpk topic create transactions drift-alerts -p 1 -r 1
 
 services:
   redpanda:
@@ -20,6 +19,36 @@ services:
       - "9092:9092"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
+
+  jobmanager:
+    build: ./flink
+    image: drift-monitor-flink:1.20.1
+    container_name: flink-jobmanager
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        jobmanager.memory.process.size: 1024m
+    volumes:
+      - ../streaming:/opt/flink/jobs
+
+  taskmanager:
+    image: drift-monitor-flink:1.20.1
+    container_name: flink-taskmanager
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        taskmanager.memory.process.size: 1536m
+    volumes:
+      - ../streaming:/opt/flink/jobs
 
 volumes:
   redpanda-data:
