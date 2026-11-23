@@ -4,6 +4,8 @@ from pyflink.table import EnvironmentSettings, TableEnvironment
 BROKERS = "redpanda:29092"
 AMOUNT_JUMP = 0.5        # alert if the window's average amount changes by more than 50%
 TRANSFER_JUMP = 0.05     # alert if the TRANSFER share changes by more than 5 points
+MIN_TXNS = 1000          # never judge a window (or its reference) smaller than this
+
 
 SOURCE = f"""
 CREATE TABLE transactions (
@@ -40,8 +42,9 @@ SCORED = """
 CREATE VIEW scored AS
 SELECT
     window_start, window_end, txns, avg_amount, transfer_share,
-    LAG(avg_amount)     OVER (ORDER BY window_time) AS prev_avg_amount,
-    LAG(transfer_share) OVER (ORDER BY window_time) AS prev_transfer_share
+    LAG(avg_amount, 4)     OVER (ORDER BY window_time) AS prev_avg_amount,
+    LAG(transfer_share, 4) OVER (ORDER BY window_time) AS prev_transfer_share,
+    LAG(txns, 4)           OVER (ORDER BY window_time) AS prev_txns
 FROM window_stats
 """
 
@@ -92,6 +95,7 @@ SELECT window_start, window_end, txns, avg_amount, prev_avg_amount,
        transfer_share, prev_transfer_share
 FROM scored
 WHERE prev_avg_amount IS NOT NULL
+  AND txns >= {MIN_TXNS} AND prev_txns >= {MIN_TXNS}
   AND (ABS(avg_amount / prev_avg_amount - 1) > {AMOUNT_JUMP}
        OR ABS(transfer_share - prev_transfer_share) > {TRANSFER_JUMP})
 """
