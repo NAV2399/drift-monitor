@@ -28,3 +28,7 @@
 - False alarms before drift: PSI 1, KS 1, ADWIN 0.
 - Horizon 30 vs 50 gave identical results, so the results are robust to the horizon choice.
 - Conclusion: run PSI and ADWIN together: PSI for fast jumps, ADWIN for slow creep.
+## Data findings (silver and gold)
+- **Balance columns:** 3,678,407 of 4,963,336 outgoing rows (74%) don't balance. Treated as unreliable; flagged in silver, never used by gold or detectors.
+- **Dataset tail:** day 31 contains only fraud (136 TRANSFER + 136 CASH_OUT, 100% fraud). The final window is unrepresentative; excluded from detection.
+- **Ratio alerts:** day 3's 29% fraud rate comes from volume collapsing (1,070 txns), not more fraud (310, a normal count). Check numerator and denominator before alerting on a ratio.
