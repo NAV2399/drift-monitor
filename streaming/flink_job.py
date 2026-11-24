@@ -1,11 +1,10 @@
-"""Flink streaming job: 6-hour event-time windows over transactions, flag big jumps."""
+"""Flink streaming job: 6-hour event-time windows, compared with the same time yesterday."""
 from pyflink.table import EnvironmentSettings, TableEnvironment
 
 BROKERS = "redpanda:29092"
-AMOUNT_JUMP = 0.5        # alert if the window's average amount changes by more than 50%
+AMOUNT_JUMP = 0.5        # alert if average amount changes by more than 50% vs the same time yesterday
 TRANSFER_JUMP = 0.05     # alert if the TRANSFER share changes by more than 5 points
 MIN_TXNS = 1000          # never judge a window (or its reference) smaller than this
-
 
 SOURCE = f"""
 CREATE TABLE transactions (
@@ -103,6 +102,7 @@ WHERE prev_avg_amount IS NOT NULL
 
 def main():
     t_env = TableEnvironment.create(EnvironmentSettings.in_streaming_mode())
+    t_env.get_config().set("pipeline.name", "drift-monitor-live")
     for ddl in (SOURCE, WINDOW_STATS, SCORED, STATS_SINK, ALERTS_SINK):
         t_env.execute_sql(ddl)
 

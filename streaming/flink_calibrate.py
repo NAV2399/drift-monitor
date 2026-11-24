@@ -1,4 +1,4 @@
-"""Calibrate the Flink rule: read window-stats and compare two reference choices."""
+"""Calibrate the Flink rule: read window-stats and compare reference choices and minimum sizes."""
 import json
 
 import pandas as pd
@@ -41,8 +41,5 @@ def main():
         score(w, 4, "Same time yesterday", min_txns)
 
 
-
-
 if __name__ == "__main__":
     main()
-

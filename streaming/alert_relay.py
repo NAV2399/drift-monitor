@@ -18,8 +18,8 @@ def format_alert(a: dict) -> tuple[str, str]:
     subject = f"[Drift Monitor] Drift detected in window {a['window_start']}"
     body = (
         f"Window: {a['window_start']} -> {a['window_end']}\n"
-        f"Average amount: {a['avg_amount']:,.0f} (previous {a['prev_avg_amount']:,.0f}, {change:+.0f}%)\n"
-        f"Transfer share: {a['transfer_share']:.3f} (previous {a['prev_transfer_share']:.3f})\n"
+        f"Average amount: {a['avg_amount']:,.0f} (same time yesterday {a['prev_avg_amount']:,.0f}, {change:+.0f}%)\n"
+        f"Transfer share: {a['transfer_share']:.3f} (same time yesterday {a['prev_transfer_share']:.3f})\n"
         f"Transactions in window: {a['txns']:,}\n"
     )
     return subject, body
