@@ -1,4 +1,6 @@
 # Drift Monitor — Real-Time Data Drift Detection for Transaction Streams
+[![tests](https://github.com/NAV2399/drift-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/NAV2399/drift-monitor/actions/workflows/tests.yml)
+
 
 A reproducible streaming evaluation harness that detects distribution drift in financial transaction streams and compares drift-detection methods against known, injected ground truth.
 
