@@ -29,9 +29,7 @@ Drift is injected at a known point, and each detector is graded on **detection d
 - **KS adds nothing PSI doesn't already catch.**
 - **A 30% shift in transaction type sits inside PaySim's natural noise** (PSI ≈ 0.12 against a baseline maximum of 0.117).
 - **Recommendation:** run PSI and ADWIN together — PSI for fast jumps, ADWIN for slow creep.
-
-Results are reproducible: a rerun days later produced identical numbers, and grading uses a no-drift control so that natural noise is never credited as a detection.
-
+Results are reproducible: rerunning the scoring days later produced identical numbers. Grading uses a no-drift control: an alert is not credited as a detection if the detector also fires in the same window on the clean, undrifted stream.
 ---
 
 ## The problem (research angle)
